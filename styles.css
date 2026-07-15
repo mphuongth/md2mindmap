@@ -74,7 +74,7 @@ html, body {
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 45%, #ffffff 0%, #f5f6f8 70%, #eceff3 100%);
+    radial-gradient(circle at 50% 42%, #ffffff 0%, #f7f9fb 68%, #eef2f6 100%);
 }
 .stage svg { width: 100%; height: 100%; display: block; }
 
@@ -82,8 +82,9 @@ html, body {
    gradient stroke approximation; we instead draw a filled tapered shape
    per branch (see mindmap.js taperBranch). */
 .branch { fill: none; stroke-linecap: round; }
-.node-root rect { fill: #ffffff; stroke: #1f2937; stroke-width: 1.5; rx: 10; ry: 10; }
-.node-root text { font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+/* Cold Steel: graphite root box with white type (matches the workbench app) */
+.node-root rect { fill: #12181f; stroke: #0a0e13; stroke-width: 1.5; rx: 10; ry: 10; }
+.node-root text { font-size: 18px; font-weight: 700; letter-spacing: .5px; fill: #ffffff; }
 .node-topic text { font-size: 15px; font-weight: 600; }
 .node-detail text { font-size: 12px; fill: #374151; }
 .node-q text { fill: #b91c1c; font-weight: 600; }
