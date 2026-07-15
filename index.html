@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MD → Mindmap</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <h1>MD → Mindmap</h1>
+    <span class="muted">left/right · curved branches · color per branch</span>
+    <span class="spacer"></span>
+    <label class="btn">
+      Upload .md
+      <input type="file" id="file" accept=".md,.markdown,text/markdown" />
+    </label>
+    <button class="btn" id="paste">Paste MD</button>
+    <button class="btn primary" id="load-sample">Load sample</button>
+    <span class="sep"></span>
+    <button class="btn" id="zoom-out" title="Zoom out">&minus;</button>
+    <button class="btn" id="zoom-in" title="Zoom in">+</button>
+    <button class="btn" id="fit">Fit</button>
+    <span class="sep"></span>
+    <button class="btn" id="expand-all">Expand all</button>
+    <button class="btn" id="collapse-all">Collapse all</button>
+    <button class="btn" id="export">Export SVG</button>
+  </div>
+  <div class="stage">
+    <svg id="mindmap" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="empty-hint" id="hint">Upload a <code>.md</code> file or click <b>Load sample</b> to render a mindmap.</div>
+  </div>
+</div>
+
+<script src="mindmap.js?v=4"></script>
+<script>
+(function () {
+  "use strict";
+  const svg = document.getElementById("mindmap");
+  const hint = document.getElementById("hint");
+  const fileInput = document.getElementById("file");
+  const fitBtn = document.getElementById("fit");
+
+  // mindmap.js owns parsing, layout, pan/zoom and collapse; the page just
+  // feeds it Markdown and wires the toolbar buttons to its API.
+  function render(md) {
+    hint.style.display = "none";
+    fitBtn.textContent = "Fit";
+    try {
+      window.Mindmap.render(svg, md);
+    } catch (e) {
+      console.error("[diagram] render failed:", e);
+      hint.textContent = "Render error: " + e.message;
+      hint.style.display = "";
+    }
+  }
+
+  function loadFile(f) {
+    const r = new FileReader();
+    r.onload = () => render(String(r.result));
+    r.readAsText(f);
+  }
+  fileInput.addEventListener("change", () => { if (fileInput.files[0]) loadFile(fileInput.files[0]); });
+
+  document.getElementById("load-sample").addEventListener("click", () => {
+    // fetch('sample.md') is blocked under file:// by CORS, so render the inline
+    // SAMPLE. sample.md still ships for reference / when served over http(s).
+    render(SAMPLE);
+  });
+
+  document.getElementById("paste").addEventListener("click", () => {
+    const md = prompt("Paste your Markdown here:");
+    if (md) render(md);
+  });
+
+  document.getElementById("zoom-in").addEventListener("click", () => window.Mindmap.zoomIn());
+  document.getElementById("zoom-out").addEventListener("click", () => window.Mindmap.zoomOut());
+
+  // Fit toggles between the whole-map overview and the readable (opened) view.
+  fitBtn.addEventListener("click", () => {
+    const full = window.Mindmap.toggleFit();
+    fitBtn.textContent = full ? "Readable" : "Fit";
+  });
+
+  document.getElementById("expand-all").addEventListener("click", () => {
+    window.Mindmap.expandAll();
+    fitBtn.textContent = "Fit";
+  });
+  document.getElementById("collapse-all").addEventListener("click", () => {
+    window.Mindmap.collapseAll();
+    fitBtn.textContent = "Fit";
+  });
+
+  document.getElementById("export").addEventListener("click", () => {
+    const xml = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([xml], { type: "image/svg+xml" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "mindmap.svg";
+    a.click();
+  });
+
+  // inline sample — built as an array of lines joined by real newlines, so it
+  // does not depend on how the editor escapes \n in the source string.
+  const SAMPLE = [
+    "# Tinder App Brainstorm",
+    "- Matching",
+    "  - Swipe screen",
+    "    - Default state",
+    "    - Empty state (no more profiles)",
+    "    - Q: mutual-like vs. algorithm-based matching?",
+    "  - Match popup",
+    "    - Q: can the user undo a match?",
+    "    - Animated reveal",
+    "- Onboarding",
+    "  - Phone verification",
+    "    - SMS OTP",
+    "    - Q: support email login too?",
+    "  - Profile setup",
+    "    - Photos (up to 6)",
+    "    - Bio (max 500 chars)",
+    "    - Q: required prompts like Hinge?",
+    "- Chat",
+    "  - Text messages",
+    "    - Read receipts",
+    "    - Q: typing indicator needed?",
+    "  - Media",
+    "    - Image sharing",
+    "    - Q: voice notes in v1?",
+    "- Profile",
+    "  - Viewing others",
+    "    - Distance display",
+    "    - Q: show last-active timestamp?",
+    "  - Editing own",
+    "    - Reorder photos",
+    "- Settings",
+    "  - Account",
+    "    - Delete account",
+    "    - Q: grace period before wipe?",
+    "  - Notifications",
+    "    - Push toggle",
+    "- Safety",
+    "  - Reporting",
+    "    - Report user",
+    "    - Block user",
+    "  - Verification badge",
+    "    - Photo verification",
+    "    - Q: require ID for verification?",
+  ].join("\n");
+
+  // Auto-render the inline sample on load (file:// blocks fetch, so we don't
+  // even try — just show the mindmap immediately).
+  render(SAMPLE);
+})();
+</script>
+</body>
+</html>

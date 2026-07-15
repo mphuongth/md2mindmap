@@ -1,0 +1,101 @@
+/* diagram/ — standalone .md → radial mindmap page */
+
+:root {
+  --bg: #fafafa;
+  --ink: #1f2937;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --panel: #ffffff;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.app {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr;
+  height: 100vh;
+}
+
+/* Top bar */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+.topbar h1 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+.topbar .spacer { flex: 1; }
+.topbar .muted { color: var(--muted); font-size: 12px; }
+.topbar button,
+.topbar label.btn,
+.topbar input[type="file"] {
+  margin: 0;
+}
+.topbar input[type="file"] { display: none; }
+.btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 6px;
+  font: inherit;
+  cursor: pointer;
+}
+.btn:hover { background: #f3f4f6; }
+.btn.primary { border-color: #2563eb; color: #2563eb; }
+.topbar .sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 2px 4px;
+  background: var(--border);
+}
+
+/* Collapse/expand badge on nodes with hidden children */
+.toggle:hover { stroke-width: 2.5; }
+
+/* Stage */
+.stage {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 45%, #ffffff 0%, #f5f6f8 70%, #eceff3 100%);
+}
+.stage svg { width: 100%; height: 100%; display: block; }
+
+/* Curved branch paths: drawn as SVG paths, stroke width tapers via a
+   gradient stroke approximation; we instead draw a filled tapered shape
+   per branch (see mindmap.js taperBranch). */
+.branch { fill: none; stroke-linecap: round; }
+.node-root rect { fill: #ffffff; stroke: #1f2937; stroke-width: 1.5; rx: 10; ry: 10; }
+.node-root text { font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+.node-topic text { font-size: 15px; font-weight: 600; }
+.node-detail text { font-size: 12px; fill: #374151; }
+.node-q text { fill: #b91c1c; font-weight: 600; }
+
+/* Hint when empty */
+.empty-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  pointer-events: none;
+  text-align: center;
+}

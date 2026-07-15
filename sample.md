@@ -1,0 +1,45 @@
+# Tinder App Brainstorm
+
+- Matching
+  - Swipe screen
+    - Default state
+    - Empty state (no more profiles)
+    - Q: mutual-like vs. algorithm-based matching?
+  - Match popup
+    - Q: can the user undo a match?
+    - Animated reveal
+- Onboarding
+  - Phone verification
+    - SMS OTP
+    - Q: support email login too?
+  - Profile setup
+    - Photos (up to 6)
+    - Bio (max 500 chars)
+    - Q: required prompts like Hinge?
+- Chat
+  - Text messages
+    - Read receipts
+    - Q: typing indicator needed?
+  - Media
+    - Image sharing
+    - Q: voice notes in v1?
+- Profile
+  - Viewing others
+    - Distance display
+    - Q: show last-active timestamp?
+  - Editing own
+    - Reorder photos
+- Settings
+  - Account
+    - Delete account
+    - Q: grace period before wipe?
+  - Notifications
+    - Push toggle
+- Safety
+  - Reporting
+    - Report user
+    - Block user
+  - Verification badge
+    - Photo verification
+    - Q: require ID for verification?
+
