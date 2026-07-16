@@ -32,6 +32,7 @@
         <input type="file" id="file" accept=".md,.markdown,text/markdown" />
       </label>
       <button class="btn" id="load-sample">Sample</button>
+      <button class="btn" id="share" title="Copy a link that reopens this outline">Share</button>
     </div>
 
     <span class="rule"></span>
@@ -48,7 +49,14 @@
     <div class="group">
       <button class="btn" id="expand-all">Expand</button>
       <button class="btn" id="collapse-all">Collapse</button>
-      <button class="btn" id="export">Export SVG</button>
+      <div class="menu">
+        <button class="btn" id="export-btn" aria-haspopup="true" aria-expanded="false">Export &#9662;</button>
+        <div class="menu-pop" id="export-menu" hidden>
+          <button class="menu-item" id="dl-png">Download PNG</button>
+          <button class="menu-item" id="dl-svg">Download SVG</button>
+          <button class="menu-item" id="copy-png">Copy image</button>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -92,9 +100,11 @@
   const workspace = document.getElementById("workspace");
   const resizer = document.getElementById("resizer");
   const toggleBtn = document.getElementById("toggle-editor");
+  const shareBtn = document.getElementById("share");
+  const exportBtn = document.getElementById("export-btn");
+  const exportMenu = document.getElementById("export-menu");
 
-  // Read the loaded outline's shape for the instrument telemetry: how many
-  // top-level branches, how deep it nests, and how many open questions (`Q:`).
+  // ---- Telemetry ----------------------------------------------------------
   function telemetry(tree) {
     let branches = tree.children.length, levels = 0, open = 0;
     (function walk(n) {
@@ -118,8 +128,7 @@
     readout.innerHTML = html;
   }
 
-  // mindmap.js owns parsing, layout, pan/zoom and collapse; the page feeds it
-  // Markdown, reads the returned tree for telemetry, and shows an empty-state.
+  // ---- Render + editor sync ----------------------------------------------
   function render(md) {
     fitBtn.textContent = "Fit";
     try {
@@ -127,7 +136,7 @@
       paintReadout(ctrl.tree);
       const empty = ctrl.tree.children.length === 0;
       hint.innerHTML = empty
-        ? "Start with a <code># Title</code>, then indented <code>-</code> bullets — the map draws as you type."
+        ? "Start with a <code># Title</code>, then indented <code>-</code> bullets — the map draws as you type."
         : "";
       hint.style.display = empty ? "" : "none";
     } catch (e) {
@@ -145,16 +154,20 @@
 
   function persist() { try { localStorage.setItem(KEY, src.value); } catch (e) {} }
 
-  // Push the editor's content into the map + storage.
-  function sync() { render(src.value); persist(); updateStat(); }
-
   function debounce(fn, ms) { let t; return function () { clearTimeout(t); t = setTimeout(fn, ms); }; }
-  const syncDebounced = debounce(sync, 360);
 
-  // Load a document into the editor and render it immediately.
-  function setDoc(text) { src.value = text; sync(); }
+  // Push editor content into the map (+ storage, unless told not to).
+  function apply(persistNow) {
+    render(src.value);
+    updateStat();
+    if (persistNow !== false) persist();
+  }
+  const applyDebounced = debounce(apply, 360);
 
-  src.addEventListener("input", syncDebounced);
+  // Load a document into the editor and render immediately.
+  function setDoc(text, persistNow) { src.value = text; apply(persistNow); }
+
+  src.addEventListener("input", applyDebounced);
 
   // Tab inserts two spaces rather than moving focus — outlines are all indent.
   src.addEventListener("keydown", function (e) {
@@ -163,7 +176,7 @@
       const s = src.selectionStart, en = src.selectionEnd;
       src.value = src.value.slice(0, s) + "  " + src.value.slice(en);
       src.selectionStart = src.selectionEnd = s + 2;
-      syncDebounced();
+      applyDebounced();
     }
   });
 
@@ -187,42 +200,22 @@
   });
 
   document.getElementById("load-sample").addEventListener("click", () => setDoc(SAMPLE));
-
   document.getElementById("zoom-in").addEventListener("click", () => window.Mindmap.zoomIn());
   document.getElementById("zoom-out").addEventListener("click", () => window.Mindmap.zoomOut());
-
-  // Fit toggles between the whole-map overview and the readable (opened) view.
   fitBtn.addEventListener("click", () => {
     const full = window.Mindmap.toggleFit();
     fitBtn.textContent = full ? "Readable" : "Fit";
   });
+  document.getElementById("expand-all").addEventListener("click", () => { window.Mindmap.expandAll(); fitBtn.textContent = "Fit"; });
+  document.getElementById("collapse-all").addEventListener("click", () => { window.Mindmap.collapseAll(); fitBtn.textContent = "Fit"; });
 
-  document.getElementById("expand-all").addEventListener("click", () => {
-    window.Mindmap.expandAll();
-    fitBtn.textContent = "Fit";
-  });
-  document.getElementById("collapse-all").addEventListener("click", () => {
-    window.Mindmap.collapseAll();
-    fitBtn.textContent = "Fit";
-  });
-
-  document.getElementById("export").addEventListener("click", () => {
-    const xml = new XMLSerializer().serializeToString(svg);
-    const blob = new Blob([xml], { type: "image/svg+xml" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "mindmap.svg";
-    a.click();
-  });
-
-  // Show / hide the editor pane.
+  // ---- Editor pane: toggle + resize --------------------------------------
   toggleBtn.addEventListener("click", () => {
     const hidden = workspace.classList.toggle("no-editor");
     toggleBtn.classList.toggle("on", !hidden);
     toggleBtn.setAttribute("aria-pressed", String(!hidden));
   });
 
-  // Drag the handle to resize the editor.
   let rz = null;
   resizer.addEventListener("mousedown", (e) => {
     const cur = parseInt(getComputedStyle(workspace).getPropertyValue("--editor-w"), 10) || 360;
@@ -238,6 +231,152 @@
   });
   window.addEventListener("mouseup", () => {
     if (rz) { rz = null; document.body.style.cursor = ""; document.body.style.userSelect = ""; }
+  });
+
+  // ---- Small helpers ------------------------------------------------------
+  function flash(btn, text) {
+    if (btn._t) { clearTimeout(btn._t); btn.textContent = btn._old; }
+    btn._old = btn.textContent;
+    btn.textContent = text;
+    btn._t = setTimeout(() => { btn.textContent = btn._old; btn._t = null; }, 1500);
+  }
+
+  function b64urlFromBytes(bytes) {
+    let bin = "";
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function bytesFromB64url(s) {
+    s = s.replace(/-/g, "+").replace(/_/g, "/");
+    while (s.length % 4) s += "=";
+    const bin = atob(s), bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+  async function deflate(str) {
+    const cs = new CompressionStream("deflate-raw");
+    const w = cs.writable.getWriter();
+    w.write(new TextEncoder().encode(str)); w.close();
+    return new Uint8Array(await new Response(cs.readable).arrayBuffer());
+  }
+  async function inflate(bytes) {
+    const ds = new DecompressionStream("deflate-raw");
+    const w = ds.writable.getWriter();
+    w.write(bytes); w.close();
+    return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer());
+  }
+
+  // ---- Share via URL (no backend) ----------------------------------------
+  async function buildShareUrl() {
+    const base = location.origin + location.pathname;
+    const md = src.value;
+    if (window.CompressionStream) {
+      try { return base + "#c=" + b64urlFromBytes(await deflate(md)); } catch (e) { /* fall through */ }
+    }
+    return base + "#t=" + b64urlFromBytes(new TextEncoder().encode(md));
+  }
+  shareBtn.addEventListener("click", async () => {
+    const url = await buildShareUrl();
+    try {
+      await navigator.clipboard.writeText(url);
+      flash(shareBtn, "Copied!");
+    } catch (e) {
+      window.prompt("Copy this link to share your mindmap:", url);
+    }
+  });
+
+  // ---- Export: PNG / SVG / copy image ------------------------------------
+  const EXPORT_CSS =
+    'text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}' +
+    '.node-root rect{fill:#12181f;stroke:#0a0e13;stroke-width:1.5}' +
+    '.node-root text{font-size:18px;font-weight:700;letter-spacing:.5px;fill:#fff}' +
+    '.node-topic text{font-size:15px;font-weight:600}' +
+    '.node-detail text{font-size:12px}' +
+    '.node-q text{font-weight:600}' +
+    '.branch{fill:none;stroke-linecap:round}';
+
+  // Build a self-contained SVG of the whole visible map: full viewBox, identity
+  // transform, a white backing rect, and the node/branch styles inlined (the
+  // page's stylesheet doesn't apply once the SVG is rasterized on its own).
+  function exportSvg() {
+    const NS = "http://www.w3.org/2000/svg";
+    const box = (svg.getAttribute("data-view-full") || svg.getAttribute("viewBox") || "0 0 100 100")
+      .split(/\s+/).map(Number);
+    const clone = svg.cloneNode(true);
+    clone.setAttribute("viewBox", box.join(" "));
+    const vp = clone.querySelector(".viewport");
+    if (vp) vp.setAttribute("transform", "translate(0 0) scale(1)");
+    const bg = document.createElementNS(NS, "rect");
+    bg.setAttribute("x", box[0]); bg.setAttribute("y", box[1]);
+    bg.setAttribute("width", box[2]); bg.setAttribute("height", box[3]);
+    bg.setAttribute("fill", "#FFFFFF");
+    clone.insertBefore(bg, clone.firstChild);
+    const style = document.createElementNS(NS, "style");
+    style.textContent = EXPORT_CSS;
+    clone.insertBefore(style, clone.firstChild);
+    return { node: clone, w: box[2], h: box[3] };
+  }
+
+  function svgMarkup() {
+    return new XMLSerializer().serializeToString(exportSvg().node);
+  }
+
+  function download(href, name) {
+    const a = document.createElement("a");
+    a.href = href; a.download = name; a.click();
+  }
+
+  function rasterize(scale) {
+    return new Promise((resolve, reject) => {
+      const ex = exportSvg();
+      const W = Math.max(1, Math.round(ex.w * scale)), H = Math.max(1, Math.round(ex.h * scale));
+      const xml = new XMLSerializer().serializeToString(ex.node);
+      const img = new Image();
+      img.onload = () => {
+        const cv = document.createElement("canvas");
+        cv.width = W; cv.height = H;
+        cv.getContext("2d").drawImage(img, 0, 0, W, H);
+        cv.toBlob((b) => b ? resolve(b) : reject(new Error("toBlob failed")), "image/png");
+      };
+      img.onerror = () => reject(new Error("could not rasterize the map"));
+      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(xml);
+    });
+  }
+
+  function closeMenu() { exportMenu.hidden = true; exportBtn.setAttribute("aria-expanded", "false"); }
+  exportBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const willOpen = exportMenu.hidden;
+    exportMenu.hidden = !willOpen;
+    exportBtn.setAttribute("aria-expanded", String(willOpen));
+  });
+  exportMenu.addEventListener("click", (e) => e.stopPropagation());
+  document.addEventListener("click", closeMenu);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMenu(); });
+
+  document.getElementById("dl-svg").addEventListener("click", () => {
+    const blob = new Blob([svgMarkup()], { type: "image/svg+xml" });
+    const href = URL.createObjectURL(blob);
+    download(href, "mindmap.svg");
+    setTimeout(() => URL.revokeObjectURL(href), 1000);
+    closeMenu();
+  });
+  document.getElementById("dl-png").addEventListener("click", async () => {
+    closeMenu();
+    try {
+      const blob = await rasterize(2);
+      const href = URL.createObjectURL(blob);
+      download(href, "mindmap.png");
+      setTimeout(() => URL.revokeObjectURL(href), 1000);
+    } catch (e) { console.error(e); flash(exportBtn, "Export failed"); }
+  });
+  document.getElementById("copy-png").addEventListener("click", async () => {
+    closeMenu();
+    try {
+      const blob = await rasterize(2);
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      flash(exportBtn, "Copied!");
+    } catch (e) { console.error(e); flash(exportBtn, "Copy failed"); }
   });
 
   // inline sample — built as an array of lines joined by real newlines, so it
@@ -288,10 +427,31 @@
     "    - Q: require ID for verification?",
   ].join("\n");
 
-  // On load, restore the last outline (or fall back to the sample) and render.
-  let initial = null;
-  try { initial = localStorage.getItem(KEY); } catch (e) {}
-  setDoc(initial == null ? SAMPLE : initial);
+  // ---- Boot: a shared link wins, else the saved outline, else the sample ---
+  async function boot() {
+    const params = new URLSearchParams(location.hash.slice(1));
+    let doc = null;
+    try {
+      if (params.has("c") && window.DecompressionStream) {
+        doc = await inflate(bytesFromB64url(params.get("c")));
+      } else if (params.has("t")) {
+        doc = new TextDecoder().decode(bytesFromB64url(params.get("t")));
+      }
+    } catch (e) { console.error("[md2mindmap] bad share link:", e); doc = null; }
+
+    if (doc != null) {
+      // Consume the hash so a later refresh (or the user's own edits) isn't
+      // silently overwritten by the shared payload. Don't clobber their saved
+      // outline until they actually edit.
+      history.replaceState(null, "", location.origin + location.pathname);
+      setDoc(doc, false);
+      return;
+    }
+    let saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (e) {}
+    setDoc(saved == null ? SAMPLE : saved);
+  }
+  boot();
 })();
 </script>
 </body>

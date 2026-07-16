@@ -136,6 +136,41 @@ html, body {
 
 .topbar input[type="file"] { display: none; }
 
+/* Export dropdown */
+.menu { position: relative; display: inline-flex; }
+.menu-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 50;
+  min-width: 176px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: #141B24;
+  border: 1px solid var(--ink-line);
+  border-radius: 10px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .45);
+}
+.menu-pop[hidden] { display: none; }
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  font: 500 12px/1 var(--mono);
+  letter-spacing: .01em;
+  color: var(--chrome-soft);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+}
+.menu-item:hover { background: var(--ink-raised); color: var(--chrome); }
+
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;

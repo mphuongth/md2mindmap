@@ -56,7 +56,10 @@ See `sample.md` for a reference outline.
   (filled dot = collapsed with hidden children, hollow dot = expanded)
 - **Expand all / Collapse all** → open everything, or fold back to level 1
 - **Fit** → toggle between the readable view and the whole-map overview
-- **Export SVG** → download the current mindmap as `mindmap.svg`
+- **Share** → copy a link that reopens this exact outline (the Markdown is
+  compressed into the URL — no server, nothing stored)
+- **Export ▾** → download **PNG** or **SVG**, or **copy the image** to the
+  clipboard to paste into Slack / Docs / slides
 
 ## Files
 
