@@ -85,3 +85,7 @@ rendered map (used by the standalone page's toolbar).
   the two sides balanced; original order is preserved within each side.
 - Color palette is generated per map (hues spread evenly around the wheel);
   no per-node color editing yet.
+
+## License
+
+[MIT](LICENSE) © 2026 Phuong Truong
