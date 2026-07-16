@@ -65,14 +65,30 @@ See `sample.md` for a reference outline.
 - **Export ▾** → download **PNG** or **SVG**, or **copy the image** to the
   clipboard to paste into Slack / Docs / slides
 
+## VS Code extension
+
+There's a companion extension in [`vscode-extension/`](vscode-extension/) that
+previews the active `.md` file as a mindmap beside your editor, live as you
+type — same engine.
+
+```
+cd vscode-extension
+npm run package        # builds md2mindmap-<version>.vsix (needs @vscode/vsce)
+```
+
+Then **Extensions ▸ … ▸ Install from VSIX**, or press `F5` in that folder to run
+it in an Extension Development Host. Command: **md2mindmap: Open Mindmap
+Preview** (`Ctrl/Cmd+K M`).
+
 ## Files
 
 | File         | Purpose |
 |--------------|---------|
-| `index.html` | UI shell: upload / paste / sample / export, pan & zoom |
+| `index.html` | UI shell: editor, share, export, pan & zoom |
 | `mindmap.js` | Parser + left/right tidy layout + SVG render (one module) |
 | `styles.css` | Layout + node typography + branch defaults |
 | `sample.md`  | Demo outline |
+| `vscode-extension/` | VS Code preview extension (reuses `mindmap.js`) |
 
 ## Embedding
 

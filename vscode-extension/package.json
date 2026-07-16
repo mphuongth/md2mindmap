@@ -1,0 +1,53 @@
+{
+  "name": "md2mindmap",
+  "displayName": "md2mindmap — Markdown Mindmap Preview",
+  "description": "Preview a Markdown outline as a left/right balanced mindmap, live as you type.",
+  "version": "0.1.0",
+  "publisher": "mphuongth",
+  "license": "MIT",
+  "engines": { "vscode": "^1.75.0" },
+  "categories": ["Visualization", "Other"],
+  "keywords": ["markdown", "mindmap", "outline", "preview", "diagram"],
+  "repository": { "type": "git", "url": "https://github.com/mphuongth/md2mindmap" },
+  "bugs": { "url": "https://github.com/mphuongth/md2mindmap/issues" },
+  "homepage": "https://mphuongth.github.io/md2mindmap/",
+  "main": "./extension.js",
+  "activationEvents": ["onCommand:md2mindmap.openPreview"],
+  "contributes": {
+    "commands": [
+      {
+        "command": "md2mindmap.openPreview",
+        "title": "Open Mindmap Preview",
+        "category": "md2mindmap",
+        "icon": "$(type-hierarchy)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "md2mindmap.openPreview",
+          "when": "resourceLangId == markdown",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "md2mindmap.openPreview",
+          "when": "resourceLangId == markdown"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "md2mindmap.openPreview",
+        "key": "ctrl+k m",
+        "mac": "cmd+k m",
+        "when": "editorLangId == markdown"
+      }
+    ]
+  },
+  "scripts": {
+    "sync-engine": "cp ../mindmap.js media/mindmap.js",
+    "package": "vsce package"
+  }
+}
