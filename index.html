@@ -3,33 +3,63 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>MD → Mindmap</title>
+<title>md2mindmap</title>
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 <div class="app">
-  <div class="topbar">
-    <h1>MD → Mindmap</h1>
-    <span class="muted">left/right · curved branches · color per branch</span>
+  <header class="topbar">
+    <a class="brand" href="./" title="md2mindmap">
+      <span class="brand-md">md</span>
+      <!-- the token branches into the word: the tool's job, drawn -->
+      <svg class="brand-arrow" viewBox="0 0 30 22" fill="none" aria-hidden="true">
+        <path d="M5 11 C 13 11, 15 5, 24 5" stroke="#93A0B1" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M5 11 C 13 11, 15 17, 24 17" stroke="#93A0B1" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="4" cy="11" r="2.1" fill="#EAF0F7"/>
+        <circle cx="25" cy="5" r="2.4" fill="#5B93FF"/>
+        <circle cx="25" cy="17" r="2.4" fill="#E0457B"/>
+      </svg>
+      <span class="brand-map">mindmap</span>
+    </a>
+
+    <div class="readout" id="readout"></div>
+
     <span class="spacer"></span>
-    <label class="btn">
-      Upload .md
-      <input type="file" id="file" accept=".md,.markdown,text/markdown" />
-    </label>
-    <button class="btn" id="paste">Paste MD</button>
-    <button class="btn primary" id="load-sample">Load sample</button>
-    <span class="sep"></span>
-    <button class="btn" id="zoom-out" title="Zoom out">&minus;</button>
-    <button class="btn" id="zoom-in" title="Zoom in">+</button>
-    <button class="btn" id="fit">Fit</button>
-    <span class="sep"></span>
-    <button class="btn" id="expand-all">Expand all</button>
-    <button class="btn" id="collapse-all">Collapse all</button>
-    <button class="btn" id="export">Export SVG</button>
-  </div>
-  <div class="stage">
+
+    <div class="group">
+      <label class="btn accent" title="Open a Markdown file">
+        Open .md
+        <input type="file" id="file" accept=".md,.markdown,text/markdown" />
+      </label>
+      <button class="btn" id="paste">Paste</button>
+      <button class="btn" id="load-sample">Sample</button>
+    </div>
+
+    <span class="rule"></span>
+
+    <div class="group">
+      <button class="btn icon" id="zoom-out" title="Zoom out">&minus;</button>
+      <button class="btn icon" id="zoom-in" title="Zoom in">+</button>
+      <button class="btn" id="fit">Fit</button>
+    </div>
+
+    <span class="rule"></span>
+
+    <div class="group">
+      <button class="btn" id="expand-all">Expand</button>
+      <button class="btn" id="collapse-all">Collapse</button>
+      <button class="btn" id="export">Export SVG</button>
+    </div>
+  </header>
+
+  <div class="stage" id="stage">
     <svg id="mindmap" xmlns="http://www.w3.org/2000/svg"></svg>
-    <div class="empty-hint" id="hint">Upload a <code>.md</code> file or click <b>Load sample</b> to render a mindmap.</div>
+    <span class="corner tl"></span>
+    <span class="corner tr"></span>
+    <span class="corner bl"></span>
+    <span class="corner br"></span>
+    <div class="drop-veil" id="drop-veil">Release to render this outline</div>
+    <div class="empty-hint" id="hint">Drop a <code>.md</code> outline here — or <b>Open .md</b>, <b>Paste</b>, or load the <b>Sample</b>.</div>
   </div>
 </div>
 
@@ -41,17 +71,45 @@
   const hint = document.getElementById("hint");
   const fileInput = document.getElementById("file");
   const fitBtn = document.getElementById("fit");
+  const readout = document.getElementById("readout");
+  const stage = document.getElementById("stage");
 
-  // mindmap.js owns parsing, layout, pan/zoom and collapse; the page just
-  // feeds it Markdown and wires the toolbar buttons to its API.
+  // Read the loaded outline's shape for the instrument telemetry: how many
+  // top-level branches, how deep it nests, and how many open questions (`Q:`).
+  function telemetry(tree) {
+    let branches = tree.children.length, levels = 0, open = 0;
+    (function walk(n) {
+      if (n.q) open++;
+      if (n.depth > levels) levels = n.depth;
+      n.children.forEach(walk);
+    })(tree);
+    return { branches, levels, open };
+  }
+
+  function paintReadout(tree) {
+    const t = telemetry(tree);
+    let html =
+      '<span><b>' + t.branches + '</b> ' + (t.branches === 1 ? "branch" : "branches") + '</span>' +
+      '<span class="dot"></span>' +
+      '<span><b>' + t.levels + '</b> ' + (t.levels === 1 ? "level" : "levels") + '</span>';
+    if (t.open) {
+      html += '<span class="dot"></span><span class="r-open"><b>' + t.open + '</b> open</span>';
+    }
+    readout.innerHTML = html;
+  }
+
+  // mindmap.js owns parsing, layout, pan/zoom and collapse; the page just feeds
+  // it Markdown, reads the returned tree for telemetry, and wires the toolbar.
   function render(md) {
     hint.style.display = "none";
     fitBtn.textContent = "Fit";
     try {
-      window.Mindmap.render(svg, md);
+      const ctrl = window.Mindmap.render(svg, md);
+      paintReadout(ctrl.tree);
     } catch (e) {
-      console.error("[diagram] render failed:", e);
-      hint.textContent = "Render error: " + e.message;
+      console.error("[md2mindmap] render failed:", e);
+      readout.innerHTML = "";
+      hint.innerHTML = "Couldn't render that outline: " + e.message;
       hint.style.display = "";
     }
   }
@@ -63,6 +121,18 @@
   }
   fileInput.addEventListener("change", () => { if (fileInput.files[0]) loadFile(fileInput.files[0]); });
 
+  // Drag a .md onto the canvas to render it.
+  let dragDepth = 0;
+  stage.addEventListener("dragenter", (e) => { e.preventDefault(); if (dragDepth++ === 0) stage.classList.add("dragging"); });
+  stage.addEventListener("dragover", (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; });
+  stage.addEventListener("dragleave", (e) => { e.preventDefault(); if (--dragDepth <= 0) { dragDepth = 0; stage.classList.remove("dragging"); } });
+  stage.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dragDepth = 0; stage.classList.remove("dragging");
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) loadFile(f);
+  });
+
   document.getElementById("load-sample").addEventListener("click", () => {
     // fetch('sample.md') is blocked under file:// by CORS, so render the inline
     // SAMPLE. sample.md still ships for reference / when served over http(s).
@@ -70,7 +140,7 @@
   });
 
   document.getElementById("paste").addEventListener("click", () => {
-    const md = prompt("Paste your Markdown here:");
+    const md = prompt("Paste your Markdown outline:");
     if (md) render(md);
   });
 

@@ -1,11 +1,28 @@
-/* diagram/ — standalone .md → radial mindmap page */
+/* md2mindmap — standalone .md → mindmap page
+   A drafting table under a dark instrument rail: the colorful map is the hero,
+   the chrome stays quiet and precise. */
 
 :root {
-  --bg: #fafafa;
-  --ink: #1f2937;
-  --muted: #6b7280;
-  --border: #e5e7eb;
-  --panel: #ffffff;
+  /* the dark instrument rail — same graphite material as the map's root box */
+  --ink: #0F141B;
+  --ink-raised: #19212B;
+  --ink-line: rgba(233, 240, 247, .10);
+  --chrome: #EAF0F7;
+  --chrome-soft: #93A0B1;
+
+  /* the light drafting surface */
+  --canvas-0: #FFFFFF;
+  --canvas-1: #F5F8FB;
+  --canvas-2: #E7EEF5;
+  --tick: #BFCAD6;
+
+  /* one accent, reserved for the primary action + focus */
+  --accent: #5B93FF;
+  --accent-deep: #2F6BE0;
+  --redline: #C62A2A;
+
+  --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -14,73 +31,159 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
-  color: var(--ink);
-  background: var(--bg);
+  font: 14px/1.5 var(--sans);
+  color: var(--chrome);
+  background: var(--ink);
   overflow: hidden;
 }
 
 .app {
   display: grid;
   grid-template-rows: auto 1fr;
-  grid-template-columns: 1fr;
   height: 100vh;
 }
 
-/* Top bar */
+/* ---- Instrument rail ----------------------------------------------------- */
 .topbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
+  gap: 14px;
+  padding: 0 16px;
+  height: 54px;
+  background:
+    linear-gradient(180deg, #131A23 0%, var(--ink) 100%);
+  border-bottom: 1px solid #05080C;
+  box-shadow: 0 1px 0 var(--ink-line) inset;
 }
-.topbar h1 {
-  font-size: 15px;
-  font-weight: 600;
-  margin: 0;
+
+/* Wordmark: the `md` file token branches into "mindmap" — the tool's own job. */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none;
+  flex: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
-.topbar .spacer { flex: 1; }
-.topbar .muted { color: var(--muted); font-size: 12px; }
-.topbar button,
-.topbar label.btn,
-.topbar input[type="file"] {
-  margin: 0;
+.brand-md {
+  font: 600 12.5px/1 var(--mono);
+  letter-spacing: .04em;
+  color: var(--accent);
+  padding: 3px 6px 2px;
+  border: 1px solid rgba(91, 147, 255, .45);
+  border-radius: 5px;
+  background: rgba(91, 147, 255, .08);
 }
-.topbar input[type="file"] { display: none; }
+.brand-arrow { width: 30px; height: 22px; flex: none; overflow: visible; }
+.brand-map {
+  font: 640 18px/1 var(--sans);
+  letter-spacing: -.015em;
+  color: var(--chrome);
+}
+
+/* Live telemetry about the loaded outline. */
+.readout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 14px;
+  margin-left: 2px;
+  border-left: 1px solid var(--ink-line);
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .02em;
+  color: var(--chrome-soft);
+  white-space: nowrap;
+}
+.readout b { color: var(--chrome); font-weight: 600; }
+.readout .r-open b { color: #FF8B8B; }
+.readout .dot { width: 3px; height: 3px; border-radius: 99px; background: var(--chrome-soft); opacity: .5; }
+.readout:empty { display: none; }
+
+.spacer { flex: 1; }
+
+/* Control groups */
+.group { display: inline-flex; align-items: center; gap: 4px; }
+.rule { width: 1px; height: 22px; background: var(--ink-line); margin: 0 6px; flex: none; }
+
 .btn {
-  padding: 6px 14px;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  border-radius: 6px;
-  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 33px;
+  padding: 0 12px;
+  font: 500 12px/1 var(--mono);
+  letter-spacing: .01em;
+  color: var(--chrome-soft);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
   cursor: pointer;
+  white-space: nowrap;
+  transition: background .14s ease, color .14s ease, border-color .14s ease, transform .05s ease;
 }
-.btn:hover { background: #f3f4f6; }
-.btn.primary { border-color: #2563eb; color: #2563eb; }
-.topbar .sep {
-  width: 1px;
-  align-self: stretch;
-  margin: 2px 4px;
-  background: var(--border);
+.btn:hover { background: var(--ink-raised); color: var(--chrome); }
+.btn:active { transform: translateY(.5px); }
+.btn.icon { width: 33px; padding: 0; font-size: 16px; }
+.btn.accent {
+  color: #fff;
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-deep) 100%);
+  border-color: var(--accent-deep);
+  box-shadow: 0 1px 0 rgba(0,0,0,.25), 0 0 0 0 rgba(91,147,255,.0);
+}
+.btn.accent:hover { color: #fff; filter: brightness(1.06); }
+
+.topbar input[type="file"] { display: none; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 8px;
 }
 
-/* Collapse/expand badge on nodes with hidden children */
-.toggle:hover { stroke-width: 2.5; }
-
-/* Stage */
+/* ---- Stage: the drafting surface ----------------------------------------- */
 .stage {
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 42%, #ffffff 0%, #f7f9fb 68%, #eef2f6 100%);
+    radial-gradient(120% 90% at 50% 42%, var(--canvas-0) 0%, var(--canvas-1) 62%, var(--canvas-2) 100%);
 }
 .stage svg { width: 100%; height: 100%; display: block; }
 
-/* Curved branch paths: drawn as SVG paths, stroke width tapers via a
-   gradient stroke approximation; we instead draw a filled tapered shape
-   per branch (see mindmap.js taperBranch). */
+/* Registration ticks — frame the canvas like a plate on a drafting table. */
+.corner {
+  position: absolute;
+  width: 16px; height: 16px;
+  border: 0 solid var(--tick);
+  pointer-events: none;
+  z-index: 3;
+  opacity: .8;
+}
+.corner.tl { top: 14px; left: 14px; border-top-width: 1.5px; border-left-width: 1.5px; }
+.corner.tr { top: 14px; right: 14px; border-top-width: 1.5px; border-right-width: 1.5px; }
+.corner.bl { bottom: 14px; left: 14px; border-bottom-width: 1.5px; border-left-width: 1.5px; }
+.corner.br { bottom: 14px; right: 14px; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+
+/* Drag-and-drop veil */
+.drop-veil {
+  position: absolute;
+  inset: 12px;
+  z-index: 4;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--accent);
+  border-radius: 14px;
+  background: rgba(91, 147, 255, .07);
+  color: var(--accent-deep);
+  font: 600 14px/1.4 var(--sans);
+  backdrop-filter: blur(1px);
+}
+.stage.dragging .drop-veil { display: flex; }
+.stage.dragging .corner { opacity: 0; }
+
+/* ---- Map nodes (class hooks used by mindmap.js — keep these) -------------- */
 .branch { fill: none; stroke-linecap: round; }
 /* Cold Steel: graphite root box with white type (matches the workbench app) */
 .node-root rect { fill: #12181f; stroke: #0a0e13; stroke-width: 1.5; rx: 10; ry: 10; }
@@ -88,15 +191,48 @@ html, body {
 .node-topic text { font-size: 15px; font-weight: 600; }
 .node-detail text { font-size: 12px; fill: #374151; }
 .node-q text { fill: #b91c1c; font-weight: 600; }
+.toggle:hover { stroke-width: 2.5; }
 
-/* Hint when empty */
+/* ---- Empty / error card -------------------------------------------------- */
 .empty-hint {
   position: absolute;
   inset: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
+  padding: 24px;
+  color: #5A6675;
   pointer-events: none;
   text-align: center;
+  font: 13px/1.6 var(--sans);
+}
+.empty-hint code {
+  font: 12px/1 var(--mono);
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: #E7EEF5;
+  color: #2F3A47;
+}
+
+/* ---- Load reveal --------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .topbar { animation: rail-in .5s cubic-bezier(.2,.7,.2,1) both; }
+  .stage svg { animation: map-in .7s cubic-bezier(.2,.7,.2,1) both .08s; }
+  @keyframes rail-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+  @keyframes map-in { from { opacity: 0; transform: scale(.985); } to { opacity: 1; transform: none; } }
+}
+
+/* ---- Responsive ---------------------------------------------------------- */
+@media (max-width: 860px) {
+  .app { grid-template-rows: auto 1fr; }
+  .topbar { height: auto; flex-wrap: wrap; padding: 10px 12px; gap: 8px 10px; }
+  .readout { display: none; }
+  .spacer { flex-basis: 100%; height: 0; }
+  .btn { height: 30px; }
+}
+@media (max-width: 520px) {
+  .brand-map { font-size: 16px; }
+  .btn { padding: 0 9px; font-size: 11px; }
+  .btn.icon { width: 30px; }
 }
