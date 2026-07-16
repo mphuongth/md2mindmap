@@ -31,13 +31,13 @@
         Open .md
         <input type="file" id="file" accept=".md,.markdown,text/markdown" />
       </label>
-      <button class="btn" id="paste">Paste</button>
       <button class="btn" id="load-sample">Sample</button>
     </div>
 
     <span class="rule"></span>
 
     <div class="group">
+      <button class="btn on" id="toggle-editor" aria-pressed="true" title="Show or hide the editor">Editor</button>
       <button class="btn icon" id="zoom-out" title="Zoom out">&minus;</button>
       <button class="btn icon" id="zoom-in" title="Zoom in">+</button>
       <button class="btn" id="fit">Fit</button>
@@ -52,27 +52,46 @@
     </div>
   </header>
 
-  <div class="stage" id="stage">
-    <svg id="mindmap" xmlns="http://www.w3.org/2000/svg"></svg>
-    <span class="corner tl"></span>
-    <span class="corner tr"></span>
-    <span class="corner bl"></span>
-    <span class="corner br"></span>
-    <div class="drop-veil" id="drop-veil">Release to render this outline</div>
-    <div class="empty-hint" id="hint">Drop a <code>.md</code> outline here — or <b>Open .md</b>, <b>Paste</b>, or load the <b>Sample</b>.</div>
+  <div class="workspace" id="workspace">
+    <section class="editor" id="editor">
+      <div class="editor-head">
+        <span class="editor-name">outline.md</span>
+        <span class="editor-stat" id="editor-stat"></span>
+      </div>
+      <textarea class="editor-area" id="src" spellcheck="false"
+        placeholder="Write a nested Markdown outline — # Title, then indented - bullets. Lines starting with Q: turn red."></textarea>
+    </section>
+
+    <div class="resizer" id="resizer" title="Drag to resize"></div>
+
+    <div class="stage" id="stage">
+      <svg id="mindmap" xmlns="http://www.w3.org/2000/svg"></svg>
+      <span class="corner tl"></span>
+      <span class="corner tr"></span>
+      <span class="corner bl"></span>
+      <span class="corner br"></span>
+      <div class="drop-veil" id="drop-veil">Release to render this outline</div>
+      <div class="empty-hint" id="hint"></div>
+    </div>
   </div>
 </div>
 
-<script src="mindmap.js?v=4"></script>
+<script src="mindmap.js?v=5"></script>
 <script>
 (function () {
   "use strict";
+  const KEY = "md2mindmap:doc";
   const svg = document.getElementById("mindmap");
   const hint = document.getElementById("hint");
   const fileInput = document.getElementById("file");
   const fitBtn = document.getElementById("fit");
   const readout = document.getElementById("readout");
   const stage = document.getElementById("stage");
+  const src = document.getElementById("src");
+  const statEl = document.getElementById("editor-stat");
+  const workspace = document.getElementById("workspace");
+  const resizer = document.getElementById("resizer");
+  const toggleBtn = document.getElementById("toggle-editor");
 
   // Read the loaded outline's shape for the instrument telemetry: how many
   // top-level branches, how deep it nests, and how many open questions (`Q:`).
@@ -88,6 +107,7 @@
 
   function paintReadout(tree) {
     const t = telemetry(tree);
+    if (!t.branches) { readout.innerHTML = ""; return; }
     let html =
       '<span><b>' + t.branches + '</b> ' + (t.branches === 1 ? "branch" : "branches") + '</span>' +
       '<span class="dot"></span>' +
@@ -98,14 +118,18 @@
     readout.innerHTML = html;
   }
 
-  // mindmap.js owns parsing, layout, pan/zoom and collapse; the page just feeds
-  // it Markdown, reads the returned tree for telemetry, and wires the toolbar.
+  // mindmap.js owns parsing, layout, pan/zoom and collapse; the page feeds it
+  // Markdown, reads the returned tree for telemetry, and shows an empty-state.
   function render(md) {
-    hint.style.display = "none";
     fitBtn.textContent = "Fit";
     try {
       const ctrl = window.Mindmap.render(svg, md);
       paintReadout(ctrl.tree);
+      const empty = ctrl.tree.children.length === 0;
+      hint.innerHTML = empty
+        ? "Start with a <code># Title</code>, then indented <code>-</code> bullets — the map draws as you type."
+        : "";
+      hint.style.display = empty ? "" : "none";
     } catch (e) {
       console.error("[md2mindmap] render failed:", e);
       readout.innerHTML = "";
@@ -114,14 +138,43 @@
     }
   }
 
+  function updateStat() {
+    const lines = src.value ? src.value.split(/\n/).length : 0;
+    statEl.textContent = lines + (lines === 1 ? " line" : " lines");
+  }
+
+  function persist() { try { localStorage.setItem(KEY, src.value); } catch (e) {} }
+
+  // Push the editor's content into the map + storage.
+  function sync() { render(src.value); persist(); updateStat(); }
+
+  function debounce(fn, ms) { let t; return function () { clearTimeout(t); t = setTimeout(fn, ms); }; }
+  const syncDebounced = debounce(sync, 360);
+
+  // Load a document into the editor and render it immediately.
+  function setDoc(text) { src.value = text; sync(); }
+
+  src.addEventListener("input", syncDebounced);
+
+  // Tab inserts two spaces rather than moving focus — outlines are all indent.
+  src.addEventListener("keydown", function (e) {
+    if (e.key === "Tab" && !e.shiftKey) {
+      e.preventDefault();
+      const s = src.selectionStart, en = src.selectionEnd;
+      src.value = src.value.slice(0, s) + "  " + src.value.slice(en);
+      src.selectionStart = src.selectionEnd = s + 2;
+      syncDebounced();
+    }
+  });
+
   function loadFile(f) {
     const r = new FileReader();
-    r.onload = () => render(String(r.result));
+    r.onload = () => setDoc(String(r.result));
     r.readAsText(f);
   }
   fileInput.addEventListener("change", () => { if (fileInput.files[0]) loadFile(fileInput.files[0]); });
 
-  // Drag a .md onto the canvas to render it.
+  // Drag a .md onto the canvas → load it into the editor.
   let dragDepth = 0;
   stage.addEventListener("dragenter", (e) => { e.preventDefault(); if (dragDepth++ === 0) stage.classList.add("dragging"); });
   stage.addEventListener("dragover", (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; });
@@ -133,16 +186,7 @@
     if (f) loadFile(f);
   });
 
-  document.getElementById("load-sample").addEventListener("click", () => {
-    // fetch('sample.md') is blocked under file:// by CORS, so render the inline
-    // SAMPLE. sample.md still ships for reference / when served over http(s).
-    render(SAMPLE);
-  });
-
-  document.getElementById("paste").addEventListener("click", () => {
-    const md = prompt("Paste your Markdown outline:");
-    if (md) render(md);
-  });
+  document.getElementById("load-sample").addEventListener("click", () => setDoc(SAMPLE));
 
   document.getElementById("zoom-in").addEventListener("click", () => window.Mindmap.zoomIn());
   document.getElementById("zoom-out").addEventListener("click", () => window.Mindmap.zoomOut());
@@ -169,6 +213,31 @@
     a.href = URL.createObjectURL(blob);
     a.download = "mindmap.svg";
     a.click();
+  });
+
+  // Show / hide the editor pane.
+  toggleBtn.addEventListener("click", () => {
+    const hidden = workspace.classList.toggle("no-editor");
+    toggleBtn.classList.toggle("on", !hidden);
+    toggleBtn.setAttribute("aria-pressed", String(!hidden));
+  });
+
+  // Drag the handle to resize the editor.
+  let rz = null;
+  resizer.addEventListener("mousedown", (e) => {
+    const cur = parseInt(getComputedStyle(workspace).getPropertyValue("--editor-w"), 10) || 360;
+    rz = { x: e.clientX, w: cur };
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    e.preventDefault();
+  });
+  window.addEventListener("mousemove", (e) => {
+    if (!rz) return;
+    let w = Math.max(240, Math.min(680, rz.w + (e.clientX - rz.x)));
+    workspace.style.setProperty("--editor-w", w + "px");
+  });
+  window.addEventListener("mouseup", () => {
+    if (rz) { rz = null; document.body.style.cursor = ""; document.body.style.userSelect = ""; }
   });
 
   // inline sample — built as an array of lines joined by real newlines, so it
@@ -219,9 +288,10 @@
     "    - Q: require ID for verification?",
   ].join("\n");
 
-  // Auto-render the inline sample on load (file:// blocks fetch, so we don't
-  // even try — just show the mindmap immediately).
-  render(SAMPLE);
+  // On load, restore the last outline (or fall back to the sample) and render.
+  let initial = null;
+  try { initial = localStorage.getItem(KEY); } catch (e) {}
+  setDoc(initial == null ? SAMPLE : initial);
 })();
 </script>
 </body>

@@ -15,6 +15,8 @@ dependencies.
 - **Opens collapsed to level 1** (root + top-level sections); expand nodes
   one at a time, or all at once
 
+**[Live demo →](https://mphuongth.github.io/md2mindmap/)**
+
 ## Run
 
 Open the page in a browser — nothing to install:
@@ -23,8 +25,10 @@ Open the page in a browser — nothing to install:
 index.html   ← double-click, or drag into Chrome / Edge / Firefox
 ```
 
-On load it renders a built-in sample. Use **Upload .md** to render your own
-outline, or **Paste MD** to paste one in.
+Type a Markdown outline in the left **editor** and the map redraws as you
+write. Your outline is kept in `localStorage`, so it's still there next time.
+You can also **Open .md**, **drag a `.md` onto the canvas**, or load the
+**Sample**. Hide the editor with the **Editor** toggle for a full-width map.
 
 ## Input format
 
@@ -44,6 +48,8 @@ See `sample.md` for a reference outline.
 
 ## Interactions
 
+- Type in the **editor** → the map redraws live (and saves to `localStorage`)
+- **Editor** toggle → show / hide the editor; drag the divider to resize it
 - Mouse wheel → zoom toward the cursor; **−/+** buttons zoom about center
 - Click-drag → pan
 - Click a node (or its dot) → expand / collapse its children

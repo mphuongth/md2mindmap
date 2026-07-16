@@ -142,10 +142,88 @@ html, body {
   border-radius: 8px;
 }
 
+/* ---- Workspace split: editor | handle | stage --------------------------- */
+.workspace {
+  display: grid;
+  grid-template-columns: var(--editor-w, 360px) 6px 1fr;
+  min-height: 0;
+  min-width: 0;
+}
+.workspace.no-editor { grid-template-columns: 1fr; }
+.workspace.no-editor .editor,
+.workspace.no-editor .resizer { display: none; }
+
+/* The Markdown editor — a dark writing surface, the material you draft in. */
+.editor {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: #0C1118;
+  border-right: 1px solid #05080C;
+}
+.editor-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  flex: none;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--ink-line);
+  background: linear-gradient(180deg, #10161F 0%, #0C1118 100%);
+}
+.editor-name {
+  font: 600 11px/1 var(--mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--chrome-soft);
+}
+.editor-stat {
+  margin-left: auto;
+  font: 500 10.5px/1 var(--mono);
+  letter-spacing: .04em;
+  color: #586373;
+}
+.editor-area {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  resize: none;
+  border: 0;
+  outline: 0;
+  padding: 14px 16px 18px;
+  font: 13px/1.7 var(--mono);
+  color: #CBD5E1;
+  background: transparent;
+  tab-size: 2;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: auto;
+}
+.editor-area::placeholder { color: #3A4453; }
+.editor-area::selection { background: rgba(91, 147, 255, .28); }
+
+/* Drag handle between editor and canvas */
+.resizer {
+  background: var(--ink);
+  cursor: col-resize;
+  position: relative;
+}
+.resizer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-left: 1px solid #05080C;
+  border-right: 1px solid var(--ink-line);
+  transition: background .14s ease;
+}
+.resizer:hover::after { background: rgba(91, 147, 255, .25); }
+
 /* ---- Stage: the drafting surface ----------------------------------------- */
 .stage {
   position: relative;
   overflow: hidden;
+  min-width: 0;
   background:
     radial-gradient(120% 90% at 50% 42%, var(--canvas-0) 0%, var(--canvas-1) 62%, var(--canvas-2) 100%);
 }
@@ -230,6 +308,13 @@ html, body {
   .readout { display: none; }
   .spacer { flex-basis: 100%; height: 0; }
   .btn { height: 30px; }
+}
+@media (max-width: 760px) {
+  /* stack: editor on top, map below */
+  .workspace { grid-template-columns: 1fr; grid-template-rows: minmax(120px, 40vh) 1fr; }
+  .workspace.no-editor { grid-template-rows: 1fr; }
+  .resizer { display: none; }
+  .editor { border-right: 0; border-bottom: 1px solid #05080C; }
 }
 @media (max-width: 520px) {
   .brand-map { font-size: 16px; }

@@ -411,17 +411,24 @@
     resetView(inst);
   }
 
+  // Listeners bind ONCE per svg element and read the current instance from
+  // `svg.__mm` (refreshed by render on every draw). This keeps re-rendering the
+  // same svg — e.g. a live editor typing into the map — from stacking duplicate
+  // wheel/drag handlers, while still panning/zooming the latest tree.
   function bindInteractions(inst) {
     var svg = inst.svg;
+    if (svg.__mmBound) return;
+    svg.__mmBound = true;
     var drag = null;
 
     svg.addEventListener("wheel", function (e) {
       e.preventDefault();
-      var vb = parseVB(inst);
+      var I = svg.__mm;
+      var vb = parseVB(I);
       var r = svg.getBoundingClientRect();
       var vbX = vb[0] + ((e.clientX - r.left) / r.width) * vb[2];
       var vbY = vb[1] + ((e.clientY - r.top) / r.height) * vb[3];
-      zoomAt(inst, e.deltaY < 0 ? 1.12 : 1 / 1.12, vbX, vbY);
+      zoomAt(I, e.deltaY < 0 ? 1.12 : 1 / 1.12, vbX, vbY);
     }, { passive: false });
 
     // Drag state is captured on this svg's mousedown, so only the map being
@@ -429,13 +436,14 @@
     svg.addEventListener("mousedown", function (e) { drag = { x: e.clientX, y: e.clientY }; });
     window.addEventListener("mousemove", function (e) {
       if (!drag) return;
-      var vb = parseVB(inst);
+      var I = svg.__mm;
+      var vb = parseVB(I);
       var r = svg.getBoundingClientRect();
       var k = r.width ? vb[2] / r.width : 1; // px -> viewBox units
-      inst.tx += (e.clientX - drag.x) * k;
-      inst.ty += (e.clientY - drag.y) * k;
+      I.tx += (e.clientX - drag.x) * k;
+      I.ty += (e.clientY - drag.y) * k;
       drag.x = e.clientX; drag.y = e.clientY;
-      applyTransform(inst);
+      applyTransform(I);
     });
     window.addEventListener("mouseup", function () { drag = null; });
   }
@@ -466,6 +474,7 @@
     paint(inst);
     setViewBoxes(svg, tree, true);
     applyTransform(inst);
+    svg.__mm = inst;         // the current instance the bound listeners act on
     bindInteractions(inst);
     last = inst;
     return controllerFor(inst);
