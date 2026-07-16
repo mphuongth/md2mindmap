@@ -85,10 +85,27 @@
         text = bullet[2].trim();
       }
 
+      // GitHub task checkbox: `- [ ] todo` / `- [x] done` (shown ☐ / ☑).
+      var task = false, done = false;
+      var cb = text.match(/^\[([ xX])\]\s+(.*)$/);
+      if (cb) { task = true; done = /x/i.test(cb[1]); text = cb[2]; }
+
       text = text.replace(/\*+/g, "").replace(/`/g, "").trim();
+
+      // Markdown link `[label](url)`: show the label, keep the first url so the
+      // node can open it. Handles multiple links on one line.
+      var url = null;
+      text = text.replace(/\[([^\]]+)\]\(([^)\s]+)[^)]*\)/g, function (_, label, href) {
+        if (!url) url = href;
+        return label;
+      }).trim();
       if (!text) continue;
 
-      var node = { text: text, children: [], q: /^Q[:?]/i.test(text) };
+      var display = (task ? (done ? "☑ " : "☐ ") : "") + text;
+      var node = {
+        text: display, children: [], q: /^Q[:?]/i.test(text),
+        task: task, done: done, url: url,
+      };
       while (stack.length > 1 && stack[stack.length - 1].indent >= indent) stack.pop();
       stack[stack.length - 1].node.children.push(node);
       stack.push({ indent: indent, node: node });
@@ -237,11 +254,11 @@
     var side = node._side || 1;
     var anchor = side < 0 ? "end" : "start";
     var cls = node.q ? "node-detail node-q" : node.depth === 1 ? "node-topic" : "node-detail";
-    var t = el("text", {
-      class: cls,
-      "text-anchor": anchor,
-      fill: node.q ? "#b91c1c" : "#1f2937", // black text; branches keep the color
-    });
+    // Q → red, done task → muted, link → accent, else black (branches keep color).
+    var fill = node.q ? "#b91c1c" : node.done ? "#9aa4af" : node.url ? "#2563eb" : "#1f2937";
+    var t = el("text", { class: cls, "text-anchor": anchor, fill: fill });
+    if (node.done) t.setAttribute("text-decoration", "line-through");
+    else if (node.url) t.setAttribute("text-decoration", "underline");
     var lines = node._lines;
     var startY = node.y - (lines.length - 1) * LINE_H / 2;
     for (var i = 0; i < lines.length; i++) {
@@ -252,7 +269,12 @@
       ts.textContent = lines[i];
       t.appendChild(ts);
     }
-    if (hasKids(node)) {
+    // A link opens its url; otherwise a parent's label toggles its children
+    // (the dot badge still toggles either way, so linked parents stay openable).
+    if (node.url) {
+      t.setAttribute("cursor", "pointer");
+      t.addEventListener("click", function (e) { e.stopPropagation(); window.open(node.url, "_blank", "noopener"); });
+    } else if (hasKids(node)) {
       t.setAttribute("cursor", "pointer");
       t.addEventListener("click", function (e) { e.stopPropagation(); toggle(inst, node); });
     }

@@ -39,6 +39,10 @@ Any `.md` whose nesting uses:
 - `##`+ headings → section nodes; bullets that follow nest **under** the
   current heading until the next one (deeper `###` nest under `##`)
 - A line starting with `Q:` (or `Q?`) → red question node
+- `- [ ]` / `- [x]` → task node: unchecked shows ☐; checked shows ☑ and is
+  struck through and muted
+- `[label](url)` → shows the label; the node turns into a link (accent +
+  underline) that opens the url in a new tab
 
 See `sample.md` for a reference outline.
 
