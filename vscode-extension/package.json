@@ -5,6 +5,7 @@
   "version": "0.1.0",
   "publisher": "mphuongth",
   "license": "MIT",
+  "icon": "icon.png",
   "engines": { "vscode": "^1.75.0" },
   "categories": ["Visualization", "Other"],
   "keywords": ["markdown", "mindmap", "outline", "preview", "diagram"],

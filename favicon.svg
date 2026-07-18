@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- app tile: same graphite as the map's root box -->
+  <rect x="0" y="0" width="32" height="32" rx="7" fill="#12181F"/>
+  <!-- a node branching into two — the outline→mindmap mark -->
+  <path d="M10 16 C 15 16, 16 9.5, 21.5 9" fill="none" stroke="#9AA6B5" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M10 16 C 15 16, 16 22.5, 21.5 23" fill="none" stroke="#9AA6B5" stroke-width="2.2" stroke-linecap="round"/>
+  <circle cx="10" cy="16" r="3.1" fill="#EAF0F7"/>
+  <circle cx="22" cy="9" r="2.9" fill="#5B93FF"/>
+  <circle cx="22" cy="23" r="2.9" fill="#E0457B"/>
+</svg>
