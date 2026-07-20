@@ -4,6 +4,10 @@ Turn a nested **Markdown outline** into a **left/right balanced mindmap** in the
 Miro / MindNode style — right in the browser. No build step, no server, no
 dependencies.
 
+**[Live demo →](https://mphuongth.github.io/md2mindmap/)**
+
+![md2mindmap: a Markdown outline in the editor, rendered as a balanced mindmap.](screenshots/app.png)
+
 - Root node: rounded box, centered, UPPERCASE (the first `# H1`)
 - Top-level branches split evenly into a left group and a right group
   (balanced by leaf count), each growing away from the root
@@ -14,8 +18,6 @@ dependencies.
 - Handles deep trees (4+ levels)
 - **Opens collapsed to level 1** (root + top-level sections); expand nodes
   one at a time, or all at once
-
-**[Live demo →](https://mphuongth.github.io/md2mindmap/)**
 
 ## Run
 
@@ -43,6 +45,8 @@ Any `.md` whose nesting uses:
   struck through and muted
 - `[label](url)` → shows the label; the node turns into a link (accent +
   underline) that opens the url in a new tab
+
+![Tasks render as ☐ / ☑ (done ones muted and struck through), links are underlined, and Q: lines are red.](screenshots/preview.png)
 
 See `sample.md` for a reference outline.
 
