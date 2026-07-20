@@ -69,6 +69,8 @@ See `sample.md` for a reference outline.
 - **Export ▾** → download **PNG** or **SVG**, or **copy the image** to the
   clipboard to paste into Slack / Docs / slides
 
+![Copying the map as an image from the Export menu, then copying a share link.](screenshots/share-export.gif)
+
 ## VS Code extension
 
 There's a companion extension in [`vscode-extension/`](vscode-extension/) that
