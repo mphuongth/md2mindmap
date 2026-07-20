@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mphuongth.github.io/md2mindmap/sitemap.xml
