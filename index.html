@@ -128,13 +128,14 @@
 
   // ---- Telemetry ----------------------------------------------------------
   function telemetry(tree) {
-    let branches = tree.children.length, levels = 0, open = 0;
+    let branches = tree.children.length, levels = 0, open = 0, tasks = 0, done = 0;
     (function walk(n) {
       if (n.q) open++;
+      if (n.task) { tasks++; if (n.done) done++; }
       if (n.depth > levels) levels = n.depth;
       n.children.forEach(walk);
     })(tree);
-    return { branches, levels, open };
+    return { branches, levels, open, tasks, done };
   }
 
   function paintReadout(tree) {
@@ -146,6 +147,9 @@
       '<span><b>' + t.levels + '</b> ' + (t.levels === 1 ? "level" : "levels") + '</span>';
     if (t.open) {
       html += '<span class="dot"></span><span class="r-open"><b>' + t.open + '</b> open</span>';
+    }
+    if (t.tasks) {
+      html += '<span class="dot"></span><span><b>' + t.done + '/' + t.tasks + '</b> done</span>';
     }
     readout.innerHTML = html;
   }

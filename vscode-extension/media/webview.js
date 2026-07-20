@@ -12,18 +12,25 @@
   window.open = function (url) { if (url) vscode.postMessage({ type: "openLink", url: String(url) }); return null; };
 
   function stats(tree) {
-    let branches = tree.children.length, levels = 0, open = 0;
-    (function walk(n) { if (n.q) open++; if (n.depth > levels) levels = n.depth; n.children.forEach(walk); })(tree);
-    return { branches, levels, open };
+    let branches = tree.children.length, levels = 0, open = 0, tasks = 0, done = 0;
+    (function walk(n) {
+      if (n.q) open++;
+      if (n.task) { tasks++; if (n.done) done++; }
+      if (n.depth > levels) levels = n.depth;
+      n.children.forEach(walk);
+    })(tree);
+    return { branches, levels, open, tasks, done };
   }
 
   function render(text) {
     try {
       const ctrl = window.Mindmap.render(svg, text || "");
       const s = stats(ctrl.tree);
-      hint.textContent = s.branches
-        ? s.branches + " branches · " + s.levels + " levels" + (s.open ? " · " + s.open + " open" : "")
-        : "Empty outline — add a # Title and indented - bullets";
+      if (!s.branches) { hint.textContent = "Empty outline — add a # Title and indented - bullets"; return; }
+      let t = s.branches + " branches · " + s.levels + " levels";
+      if (s.open) t += " · " + s.open + " open";
+      if (s.tasks) t += " · " + s.done + "/" + s.tasks + " done";
+      hint.textContent = t;
     } catch (e) {
       hint.textContent = "Render error: " + e.message;
     }

@@ -1,19 +1,26 @@
 {
   "name": "md2mindmap",
-  "displayName": "md2mindmap — Markdown Mindmap Preview",
-  "description": "Preview a Markdown outline as a left/right balanced mindmap, live as you type.",
-  "version": "0.1.0",
+  "displayName": "md2mindmap — Mindmap for Brainstorms & Planning",
+  "description": "See a Markdown outline as a balanced Miro-style mindmap — with Q: questions, task checkboxes, and an Open Questions jump list. Built for brainstorms, PRDs, and planning.",
+  "version": "0.2.0",
   "publisher": "mphuongth",
   "license": "MIT",
   "icon": "icon.png",
   "engines": { "vscode": "^1.75.0" },
   "categories": ["Visualization", "Other"],
-  "keywords": ["markdown", "mindmap", "outline", "preview", "diagram"],
+  "keywords": [
+    "mindmap", "mind map", "markdown", "outline", "brainstorm",
+    "planning", "prd", "requirements", "business analyst", "questions",
+    "tasks", "checklist", "diagram", "preview", "notes"
+  ],
   "repository": { "type": "git", "url": "https://github.com/mphuongth/md2mindmap" },
   "bugs": { "url": "https://github.com/mphuongth/md2mindmap/issues" },
   "homepage": "https://mphuongth.github.io/md2mindmap/",
   "main": "./extension.js",
-  "activationEvents": ["onCommand:md2mindmap.openPreview"],
+  "activationEvents": [
+    "onCommand:md2mindmap.openPreview",
+    "onCommand:md2mindmap.listQuestions"
+  ],
   "contributes": {
     "commands": [
       {
@@ -21,6 +28,12 @@
         "title": "Open Mindmap Preview",
         "category": "md2mindmap",
         "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "md2mindmap.listQuestions",
+        "title": "List Open Questions",
+        "category": "md2mindmap",
+        "icon": "$(question)"
       }
     ],
     "menus": {
@@ -29,13 +42,16 @@
           "command": "md2mindmap.openPreview",
           "when": "resourceLangId == markdown",
           "group": "navigation"
+        },
+        {
+          "command": "md2mindmap.listQuestions",
+          "when": "resourceLangId == markdown",
+          "group": "navigation"
         }
       ],
       "commandPalette": [
-        {
-          "command": "md2mindmap.openPreview",
-          "when": "resourceLangId == markdown"
-        }
+        { "command": "md2mindmap.openPreview", "when": "resourceLangId == markdown" },
+        { "command": "md2mindmap.listQuestions", "when": "resourceLangId == markdown" }
       ]
     },
     "keybindings": [
@@ -43,6 +59,12 @@
         "command": "md2mindmap.openPreview",
         "key": "ctrl+k m",
         "mac": "cmd+k m",
+        "when": "editorLangId == markdown"
+      },
+      {
+        "command": "md2mindmap.listQuestions",
+        "key": "ctrl+k q",
+        "mac": "cmd+k q",
         "when": "editorLangId == markdown"
       }
     ]
