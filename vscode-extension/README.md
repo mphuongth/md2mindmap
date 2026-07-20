@@ -4,6 +4,8 @@ See your Markdown outline as a **balanced, left/right Miro-style mindmap**, live
 beside the editor. Built for the way people actually plan: **open questions**,
 **task checkboxes**, and sections — not just a generic outline tree.
 
+![md2mindmap turns a Markdown outline into a balanced mindmap.](https://mphuongth.github.io/md2mindmap/og.png)
+
 ## Why this one
 
 Most Markdown mindmap tools draw the same one-directional tree. md2mindmap is
@@ -18,6 +20,8 @@ opinionated for **thinking and planning work**:
   muted and struck through, and the header shows `done / total` progress.
 - **Links** — `[label](url)` nodes open in your browser.
 - **Section headings** — bullets nest under the `##`/`###` heading above them.
+
+![Tasks show as ☐ / ☑, done ones struck through; links are underlined; Q: lines are red.](https://mphuongth.github.io/md2mindmap/screenshots/preview.png)
 
 ## Commands
 
