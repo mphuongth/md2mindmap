@@ -6,7 +6,7 @@ dependencies.
 
 **[Live demo →](https://mphuongth.github.io/md2mindmap/)**
 
-![md2mindmap: a Markdown outline in the editor, rendered as a balanced mindmap.](screenshots/app.png)
+![Typing a Markdown outline in the editor while the mindmap redraws live.](screenshots/typing.gif)
 
 - Root node: rounded box, centered, UPPERCASE (the first `# H1`)
 - Top-level branches split evenly into a left group and a right group
