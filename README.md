@@ -71,14 +71,21 @@ There's a companion extension in [`vscode-extension/`](vscode-extension/) that
 previews the active `.md` file as a mindmap beside your editor, live as you
 type — same engine.
 
+**Install:** download the prebuilt `.vsix` from the
+[latest release](https://github.com/mphuongth/md2mindmap/releases/latest), then
+**Extensions ▸ … ▸ Install from VSIX** (or `code --install-extension md2mindmap-*.vsix`).
+
+Commands: **Open Mindmap Preview** (`Ctrl/Cmd+K M`) and **List Open Questions**
+(`Ctrl/Cmd+K Q`).
+
+To build it yourself:
+
 ```
 cd vscode-extension
 npm run package        # builds md2mindmap-<version>.vsix (needs @vscode/vsce)
 ```
 
-Then **Extensions ▸ … ▸ Install from VSIX**, or press `F5` in that folder to run
-it in an Extension Development Host. Command: **md2mindmap: Open Mindmap
-Preview** (`Ctrl/Cmd+K M`).
+Or press `F5` in that folder to run it in an Extension Development Host.
 
 ## Files
 
